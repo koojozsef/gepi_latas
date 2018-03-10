@@ -29,6 +29,7 @@ int main(int argc, char** argv)
 	int histSize = 256;
 
 	/// Set the ranges ( for B,G,R) )
+
 	float range[] = { 0, 256 };
 	const float* histRange = { range };
 
@@ -69,6 +70,55 @@ int main(int argc, char** argv)
 	/// Display
 	namedWindow("calcHist Demo", CV_WINDOW_AUTOSIZE);
 	imshow("calcHist Demo", histImage);
+
+	namedWindow("original", CV_WINDOW_AUTOSIZE);
+	imshow("original", src);
+
+
+	/// 1. problem
+	///		a) bitwise_not
+	Mat bitimage;
+	bitwise_not(src, bitimage);
+
+	namedWindow("bitwise", CV_WINDOW_AUTOSIZE);
+	imshow("bitwise", bitimage);
+
+	///		b) subtract
+	Mat subimage;
+	subtract(255, src, subimage);
+
+	///		c) invert on pixels
+	Mat invimage;
+	invimage = src;
+	for (int i = 0; i < invimage.rows; ++i)
+	{
+		for (int j = 0; j < invimage.cols; ++j)
+		{
+			invimage.data[i, j, 2] = 0;
+		}
+	}
+
+	/// 2. greyscale convertálás
+	Mat greyimage;
+	cvtColor(src, greyimage, CV_BGR2GRAY);
+
+	namedWindow("grey", CV_WINDOW_AUTOSIZE);
+	imshow("grey", greyimage);
+
+	/// 3. hisztogram egyenesítés
+	Mat histedimage;
+	vector<Mat> channels;
+	split(src, channels);
+	equalizeHist(channels[0], channels[0]);
+	equalizeHist(channels[1], channels[1]);
+	equalizeHist(channels[2], channels[2]);
+
+	merge(channels, histedimage);
+
+
+	///Display own window
+	namedWindow("calcHist Demo2", CV_WINDOW_AUTOSIZE);
+	imshow("calcHist Demo2", histedimage);
 
 	waitKey(0);
 
