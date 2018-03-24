@@ -6,6 +6,17 @@
 using namespace std;
 using namespace cv;
 
+void printSharpness(Mat img, const char* name);
+float calcBlurriness(const Mat &src)
+{
+	Mat Gx, Gy;
+	Sobel(src, Gx, CV_32F, 1, 0);
+	Sobel(src, Gy, CV_32F, 0, 1);
+	double normGx = norm(Gx);
+	double normGy = norm(Gy);
+	double sumSq = normGx * normGx + normGy * normGy;
+	return static_cast<float>(1. / (sumSq / src.size().area() + 1e-6));
+}
 /**
 * @function main
 */
@@ -32,18 +43,20 @@ int main(int argc, char** argv)
 	namedWindow("1", CV_WINDOW_AUTOSIZE);
 	filter2D(src, blur1, -1, kernel);
 	imshow("1", blur1);
-
+	printSharpness(blur1, "1");
 	//2-nd step
 	Mat blur2;
 	namedWindow("2", CV_WINDOW_AUTOSIZE);
 	filter2D(blur1, blur2, -1, kernel);
 	imshow("2", blur2);
+	printSharpness(blur2, "2");
 
 	//3-rd step
 	Mat blur3;
 	namedWindow("3", CV_WINDOW_AUTOSIZE);
 	filter2D(blur2, blur3, -1, kernel);
 	imshow("3", blur3);
+	printSharpness(blur3, "3");
 
 	//4-th step
 	Mat blur4;
@@ -153,4 +166,11 @@ int main(int argc, char** argv)
 	waitKey(0);
 
 	return 0;
+}
+
+void printSharpness(Mat img, const char * name)
+{
+	float sharpnessValue = 0;
+	sharpnessValue = 1/calcBlurriness(img);
+	printf("%f, %c\n", sharpnessValue, *name);
 }
