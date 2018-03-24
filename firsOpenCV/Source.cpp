@@ -7,6 +7,8 @@ using namespace std;
 using namespace cv;
 
 void printSharpness(Mat img, const char* name);
+void third_problem(Mat src1, Mat src2, Mat src3, Mat src4);
+double getPSNR(const Mat& I1, const Mat& I2);
 float calcBlurriness(const Mat &src)
 {
 	Mat Gx, Gy;
@@ -22,47 +24,53 @@ float calcBlurriness(const Mat &src)
 */
 int main(int argc, char** argv)
 {
-	Mat src, dst;
+	Mat src, dst, src2, src3, src4;
 
 	/// Load image
 	src = imread(argv[1], 1);
+	src2 = imread(argv[2], 1);
+	src3 = imread(argv[3], 1);
+	src4 = imread(argv[4], 1);
 
-	if (!src.data)
+	if (!src.data || !src2.data || !src3.data || !src4.data)
 	{
+		printf("error");
 		return -1;
 	}
 
-	///second feladat
-	//blur the image with 2D convolution in several steps (4-5).
-	
-	Mat kernel;
-	kernel = Mat::ones(3, 3, CV_32F) / (float)(3 * 3);
-	
-	//1-st step
-	Mat blur1;
-	namedWindow("1", CV_WINDOW_AUTOSIZE);
-	filter2D(src, blur1, -1, kernel);
-	imshow("1", blur1);
-	printSharpness(blur1, "1");
-	//2-nd step
-	Mat blur2;
-	namedWindow("2", CV_WINDOW_AUTOSIZE);
-	filter2D(blur1, blur2, -1, kernel);
-	imshow("2", blur2);
-	printSharpness(blur2, "2");
+	third_problem(src, src2, src3, src4);
 
-	//3-rd step
-	Mat blur3;
-	namedWindow("3", CV_WINDOW_AUTOSIZE);
-	filter2D(blur2, blur3, -1, kernel);
-	imshow("3", blur3);
-	printSharpness(blur3, "3");
+	/////second feladat
+	////blur the image with 2D convolution in several steps (4-5).
+	//
+	//Mat kernel;
+	//kernel = Mat::ones(3, 3, CV_32F) / (float)(3 * 3);
+	//
+	////1-st step
+	//Mat blur1;
+	//namedWindow("1", CV_WINDOW_AUTOSIZE);
+	//filter2D(src, blur1, -1, kernel);
+	//imshow("1", blur1);
+	//printSharpness(blur1, "1");
+	////2-nd step
+	//Mat blur2;
+	//namedWindow("2", CV_WINDOW_AUTOSIZE);
+	//filter2D(blur1, blur2, -1, kernel);
+	//imshow("2", blur2);
+	//printSharpness(blur2, "2");
 
-	//4-th step
-	Mat blur4;
-	namedWindow("4", CV_WINDOW_AUTOSIZE);
-	filter2D(blur3, blur4, -1, kernel);
-	imshow("4", blur4);
+	////3-rd step
+	//Mat blur3;
+	//namedWindow("3", CV_WINDOW_AUTOSIZE);
+	//filter2D(blur2, blur3, -1, kernel);
+	//imshow("3", blur3);
+	//printSharpness(blur3, "3");
+
+	////4-th step
+	//Mat blur4;
+	//namedWindow("4", CV_WINDOW_AUTOSIZE);
+	//filter2D(blur3, blur4, -1, kernel);
+	//imshow("4", blur4);
 
 	///// Separate the image in 3 places ( B, G and R )
 	//vector<Mat> bgr_planes;
@@ -114,8 +122,8 @@ int main(int argc, char** argv)
 	//namedWindow("calcHist Demo", CV_WINDOW_AUTOSIZE);
 	//imshow("calcHist Demo", histImage);
 
-	//namedWindow("original", CV_WINDOW_AUTOSIZE);
-	//imshow("original", src);
+	namedWindow("original", CV_WINDOW_AUTOSIZE);
+	imshow("original", src);
 
 
 	///// 1. problem
@@ -173,4 +181,38 @@ void printSharpness(Mat img, const char * name)
 	float sharpnessValue = 0;
 	sharpnessValue = 1/calcBlurriness(img);
 	printf("%f, %c\n", sharpnessValue, *name);
+}
+
+void third_problem(Mat src1, Mat src2, Mat src3, Mat src4) {
+
+	double val;
+	val = getPSNR(src1, src1);
+	printf("origin:\t%f \n", val);
+	val = getPSNR(src1, src2);
+	printf("80:\t%f \n", val);
+	val = getPSNR(src1, src3);
+	printf("50:\t%f \n", val);
+	val = getPSNR(src1, src4);
+	printf("20:\t%f \n", val);
+}
+
+double getPSNR(const Mat& I1, const Mat& I2)
+{
+	Mat s1;
+	absdiff(I1, I2, s1);       // |I1 - I2|
+	s1.convertTo(s1, CV_32F);  // cannot make a square on 8 bits
+	s1 = s1.mul(s1);           // |I1 - I2|^2
+
+	Scalar s = sum(s1);        // sum elements per channel
+
+	double sse = s.val[0] + s.val[1] + s.val[2]; // sum channels
+
+	if (sse <= 1e-10) // for small values return zero
+		return 0;
+	else
+	{
+		double mse = sse / (double)(I1.channels() * I1.total());
+		double psnr = 10.0 * log10((255 * 255) / mse);
+		return psnr;
+	}
 }
